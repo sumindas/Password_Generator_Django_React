@@ -33,4 +33,5 @@ class User(AbstractBaseUser,PermissionsMixin):
     
 class Passwords(models.Model):
     user = models.ForeignKey(User,on_delete=models.CASCADE)
+    purpose = models.CharField(max_length = 50)
     password = models.CharField(max_length = 50)

@@ -1,12 +1,12 @@
 from django.shortcuts import render
-from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status,generics
+from rest_framework import status,generics,permissions
 from .models import User,Passwords
-from .serializers import UserSerializer,LoginUserSerializer
+from .serializers import UserSerializer,LoginUserSerializer,PasswordSerializer
 import re
-from rest_framework.generics import GenericAPIView
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import get_object_or_404
+
 
 # Create your views here.
 
@@ -19,40 +19,6 @@ def is_valid_email(email):
         return False
 
 
-class SignUpView(APIView):
-    def post(self,request):
-        data = request.data
-        email = data.get('email')
-        username = data.get('username')
-        password = data.get('password')
-        
-        print("Request-data:",email,"--",username,"--",password)
-        
-        
-        if not is_valid_email(email) or not email.strip():
-            return Response({'error': 'Please Enter Valid Email'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        if not username or not username.strip(): 
-            return Response({'error': 'Username cannot be blank or contain only spaces'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        if not password or not password.strip(): 
-            return Response({'error': 'Password cannot be blank or contain only spaces'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        if User.objects.filter(email=email).exists():
-            return Response({'error': 'Email Already Exists'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        serializer = UserSerializer(data=data)
-        
-        try:
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response({
-                'status': 200,
-                'message': 'Registration Successful',
-                'data': serializer.data
-            })
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 class RegisterUser(generics.CreateAPIView):
     permission_classes = ()
     authentication_classes = ()
@@ -90,4 +56,32 @@ class LoginView(generics.CreateAPIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
+class StorePasswordView(generics.CreateAPIView):
+    queryset = Passwords.objects.all()
+    serializer_class = PasswordSerializer
+    permission_classes = [IsAuthenticated]
+    print(IsAuthenticated)
+    
+    def perform_create(self, serializer):
+        print(self.request.user,"------")
+        serializer.save(user=self.request.user)
 
+class RetrievePasswordView(generics.ListAPIView):
+    serializer_class = PasswordSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        return Passwords.objects.filter(user=self.request.user)
+    
+class DeletePasswordView(generics.DestroyAPIView):
+    queryset = Passwords.objects.all()
+    print("--------",queryset)
+    serializer_class = PasswordSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def delete(self, request, *args, **kwargs):
+        password_id = kwargs.get('pk')
+        print(password_id,"----")
+        password = get_object_or_404(Passwords,id=password_id,user=self.request.user)
+        password.delete()
+        return Response(status=204)

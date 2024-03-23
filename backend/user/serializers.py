@@ -33,7 +33,7 @@ class LoginUserSerializer(serializers.Serializer):
     
     class Meta:
         model = User
-        fields = ['email','password','access_token','refresh_token']
+        fields = ['email','username','password','access_token','refresh_token']
         
     def validate(self, attrs):
         email = attrs.get('email')
@@ -50,14 +50,13 @@ class LoginUserSerializer(serializers.Serializer):
             raise serializers.ValidationError("incorrect Password")
         user_token = user.tokens()
         return {
-            'email': user.email,
+            'email':user.username,
             'access_token': str(user_token.get('access')),
             'refresh_token': str(user_token.get('refresh')),
-            'username':user.username
         }
     
 class PasswordSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     class Meta:
         model = Passwords
-        fields = ['user','password']
+        fields = ['id','user','purpose','password']
