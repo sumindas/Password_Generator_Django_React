@@ -61,6 +61,7 @@ class RegisterUser(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         email = request.data.get('email')
         username = request.data.get('username')
+        print(email,username)
         if User.objects.filter(email=email).exists():
             return Response({'error': 'Email already exists'}, status=status.HTTP_400_BAD_REQUEST)
         if User.objects.filter(username=username).exists():
@@ -88,3 +89,5 @@ class LoginView(generics.CreateAPIView):
             return Response(serializer.data,status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+
