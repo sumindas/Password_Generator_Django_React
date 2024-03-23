@@ -15,6 +15,7 @@ function LoginForm() {
  const navigate = useNavigate()
  const dispatch = useDispatch()
  const user = useSelector((state)=>state.auth.token)
+ const [loading, setLoading] = useState(false);
 
  useEffect(()=>{
   if(user){
@@ -48,6 +49,7 @@ function LoginForm() {
     setError('');
     setUsernameError(' ')
     setPasswordError('')
+    setLoading(true);
 
     if (!email || !password) {
       setError('Please fill required fields');
@@ -60,6 +62,7 @@ function LoginForm() {
     }
     try{
       const response = await LoginApi(userData)
+      console.log("user:",response.data)
       if (response.data.access_token){
         dispatch(setUser(response.data))
         navigate('/home')
@@ -67,7 +70,9 @@ function LoginForm() {
     }
     catch(error){
       setError(error.response.data.non_field_errors)
-    }
+    } finally {
+      setLoading(false);
+   }
  };
 
  return (
@@ -109,8 +114,8 @@ function LoginForm() {
           </div>
         )}
 
-        <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mx-auto flex items-center">
-          Login
+        <button type="submit" disabled={loading} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mx-auto flex items-center">
+        {loading ? 'Loading...' : 'Login'}
         </button>
       </form>
       {/* Add a link to the signup page */}

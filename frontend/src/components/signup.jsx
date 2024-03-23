@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { signUpApi } from "../Api/api";
 import { useSelector } from "react-redux";
@@ -15,6 +15,15 @@ function SignInForm() {
  const [error, setError] = useState(""); // Ensure error is always a string
  const [emailError, setEmailError] = useState("");
  const navigate = useNavigate();
+ const user = useSelector((state)=>state.auth.token)
+ const [loading, setLoading] = useState(false);
+
+
+ useEffect(()=>{
+    if(user){
+      navigate('/home')
+    }
+ },[user,navigate])
 
  const handleEmailChange = (e) => {
     const enteredEmail = e.target.value;
@@ -63,6 +72,7 @@ function SignInForm() {
     setUsernameError("");
     setPasswordError("");
     setConfirmPasswordError("");
+    setLoading(true)
 
     const userData = {
       email,
@@ -83,11 +93,13 @@ function SignInForm() {
         setError('An error occurred during sign-up.');
       }
       console.error(error);
+    }finally {
+      setLoading(false); 
     }
  };
 
  return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-gray-800 via-gray-900 to-gray-700">
       <h2 className="text-2xl font-bold text-white mb-5">Sign Up</h2>
       <form className="space-y-5 max-w-md w-full" onSubmit={handleSubmit}>
         {/* Email input and error message */}
@@ -181,9 +193,10 @@ function SignInForm() {
         {/* Submit button */}
         <button
           type="submit"
+          disabled={loading}
           className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mx-auto flex items-center"
         >
-          Sign in
+          {loading ? 'Loading...' : 'Sign in'}
         </button>
       </form>
       {/* Link to login page */}
