@@ -1,18 +1,30 @@
 /* eslint-disable react/no-unescaped-entities */
 /* eslint-disable no-unused-vars */
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom'; // Import Link from react-router-dom
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom'; // Import Link from react-router-dom
+import { LoginApi } from '../Api/api';
+import { setUser } from '../Redux/Slice';
+import { useDispatch, useSelector } from 'react-redux';
 
 function LoginForm() {
- const [username, setUsername] = useState('');
+ const [email, setEmail] = useState('');
  const [password, setPassword] = useState('');
  const [usernameError, setUsernameError] = useState('');
  const [passwordError, setPasswordError] = useState('');
  const [error, setError] = useState(null);
+ const navigate = useNavigate()
+ const dispatch = useDispatch()
+ const user = useSelector((state)=>state.auth.token)
+
+ useEffect(()=>{
+  if(user){
+    navigate('/home')
+  }
+ },[user,navigate])
 
  const handleUsernameChange = (e) => {
     const enteredUsername = e.target.value;
-    setUsername(enteredUsername);
+    setEmail(enteredUsername);
     if (enteredUsername.length < 3) {
       setUsernameError('Username must be at least 3 characters long');
     } else {
@@ -30,11 +42,32 @@ function LoginForm() {
     }
  };
 
- const handleSubmit = (e) => {
+ const handleSubmit = async (e) => {
     e.preventDefault();
-    // Add your form submission logic here
-    // For demonstration, let's simulate an error
-    setError('An error occurred during submission.');
+  
+    setError('');
+    setUsernameError(' ')
+    setPasswordError('')
+
+    if (!email || !password) {
+      setError('Please fill required fields');
+      return; 
+  }
+
+    const userData = {
+      email,
+      password,
+    }
+    try{
+      const response = await LoginApi(userData)
+      if (response.data.access_token){
+        dispatch(setUser(response.data))
+        navigate('/home')
+      }
+    }
+    catch(error){
+      setError(error.response.data.non_field_errors)
+    }
  };
 
  return (
@@ -49,10 +82,10 @@ function LoginForm() {
             className="w-full p-2 border border-gray-300 rounded bg-gray-800 text-white"
             type="text"
             id="username"
-            value={username}
+            value={email}
             onChange={handleUsernameChange}
           />
-          {usernameError && <p className="text-red-200 text-sm mt-1">{usernameError}</p>}
+          {usernameError && <p className="text-red-200 text-sm mt-1" style={{ textAlign: "center" }}>{usernameError}</p>}
         </div>
 
         <div>
@@ -66,13 +99,13 @@ function LoginForm() {
             value={password}
             onChange={handlePasswordChange}
           />
-          {passwordError && <p className="text-red-200 text-sm mt-1">{passwordError}</p>}
+          {passwordError && <p className="text-red-200 text-sm mt-1" style={{ textAlign: "center" }}>{passwordError}</p>}
         </div>
 
         {error && (
           <div className="bg-red-500 border border-red-600 text-red-100 px-4 py-3 rounded relative" role="alert">
-            <strong className="font-bold">Error!</strong>
-            <span className="block sm:inline"> {error}</span>
+      
+            <span className="block sm:inline" style={{ textAlign: "center" }}> {error}</span>
           </div>
         )}
 

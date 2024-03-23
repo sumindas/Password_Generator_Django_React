@@ -1,7 +1,9 @@
 /* eslint-disable react/no-unescaped-entities */
 /* eslint-disable no-unused-vars */
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Link, useNavigate } from 'react-router-dom';
+import { setLogout } from '../Redux/Slice';
 
 function HomePage() {
  const [passwordLength, setPasswordLength] = useState(12);
@@ -11,10 +13,18 @@ function HomePage() {
  const [includeSpecialChars, setIncludeSpecialChars] = useState(true);
  const [generatedPassword, setGeneratedPassword] = useState('');
  const [error, setError] = useState('');
+ const dispatch = useDispatch()
+ const navigate = useNavigate()
+ const user = useSelector((state)=>state.auth.token)
+ 
+ useEffect(()=>{
+  if(!user){
+    navigate('/')
+  }
+ },[user,navigate])
 
- // Function to generate a random password
+
  const generatePassword = () => {
-    // Implementation will go here
  };
 
  // Function to copy the generated password to the clipboard
@@ -31,7 +41,8 @@ function HomePage() {
 
  // Function to handle logout
  const handleLogout = () => {
-    // Implement your logout logic here
+    dispatch(setLogout())
+    navigate('/')
     alert('Logged out successfully!');
  };
 
